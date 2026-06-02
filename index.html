@@ -7,21 +7,22 @@
   <style>
     /* ==========================================================================
        1. 全域變數與主題色系 (Design System)
+          定義整站的色彩規範，利用變數 (CSS Variables) 方便進行主題抽換。
        ========================================================================== */
     :root {
-      --primary-color: #2a4736;         /* 主視覺色：沉穩墨綠 */
-      --primary-light: #eef3f0;         /* 互動輔助：柔和淺綠底色（用於按鈕 Hover、選取狀態） */
-      --accent-color: #b85a38;          /* 強調色：文青磚紅（用於拼音顯示、例句邊框、聲調作用中按鈕） */
-      --accent-hover: #9c4627;
+      --primary-color: #2a4736;         /* 主視覺色：沉穩墨綠，用於大標題、主要按鈕與選取狀態 */
+      --primary-light: #eef3f0;         /* 互動輔助：柔和淺綠底色，用於 Hover 提示或選單背景 */
+      --accent-color: #b85a38;          /* 強調色：文青磚紅，用於拼音、聲調等次級核心標籤 */
+      --accent-hover: #9c4627;          /* 強調色 Hover：深磚紅 */
       --bg-color: #e2e8e4;              /* 網頁大畫布底色：舒適灰綠調大地色 */
       --card-bg: #ffffff;               /* 字詞卡片底色 */
       
-      /* 🚀 Tooltip 實色高對比方案（徹底拔除薄紗霧化感，提升文字易讀性） */
-      --tooltip-bg: #f4f6f4;            /* 懸浮窗表面：100% 不透明、比大底色略深的厚實茶綠 */
-      --tooltip-text: #0a140d;          /* 懸浮窗內文：極深墨灰，確保最高對比度 */
-      --tooltip-border: #b5c4ba;        /* 懸浮窗邊框：扎實的結構邊框線 */
+      /* Tooltip (懸浮窗) 實色高對比方案：確保 100% 不透明，避免卡片層疊時字體穿透 */
+      --tooltip-bg: #f4f6f4;            /* 懸浮窗表面底色 */
+      --tooltip-text: #0a140d;          /* 懸浮窗內文顏色 */
+      --tooltip-border: #b5c4ba;        /* 懸浮窗邊框 */
       
-      --text-main: #2c3e35;             /* 深主字體色 */
+      --text-main: #2c3e35;             /* 深主字體色：大部分內文與標籤 */
       --border-color: #d1dad4;          /* 控制面板分割線、按鈕預設邊框色 */
     }
 
@@ -29,7 +30,7 @@
        2. 基礎配置與版面配置 (Reset & Base Layout)
        ========================================================================== */
     * {
-      box-sizing: border-box;
+      box-sizing: border-box; /* 寬高計算包含 Padding 與 Border，防止版面爆框 */
       margin: 0;
       padding: 0;
     }
@@ -38,18 +39,18 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans TC", sans-serif;
       background-color: var(--bg-color);
       color: var(--text-main);
-      height: 100vh;
+      height: 100vh; /* 鎖定視窗高度為 100% 視區高度 */
       display: flex;
-      flex-direction: column;
-      overflow: hidden; /* 防止視窗出現雙重滾動條，頁面滾動由 main 內部處理 */
+      flex-direction: column; /* 垂直排列：Header 在上，Main 在下 */
+      overflow: hidden; /* 禁止全域捲動，改由 Main 區域各自實作捲動條 */
     }
 
-    /* 頂部固定導覽列（包含標題與檢索面板抽屜） */
+    /* 頂部固定導覽列 */
     header {
       background-color: var(--card-bg);
       box-shadow: 0 4px 20px rgba(42, 71, 54, 0.04);
-      z-index: 10;
-      flex-shrink: 0; /* 防止 Header 被彈性排版壓縮變形 */
+      z-index: 10; /* 確保層級高於內容網格，不被卡片遮擋 */
+      flex-shrink: 0; /* 防止 Header 被彈性佈局擠壓變形 */
       border-bottom: 1px solid var(--border-color);
     }
 
@@ -61,9 +62,16 @@
 
     .top-bar {
       display: flex;
-      justify-content: space-between;
+      justify-content: space-between; /* 標題在左、功能按鈕在右 */
       align-items: center;
       width: 100%;
+    }
+
+    /* 左側標題與狀態列複合容器 */
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
     }
 
     h1 {
@@ -72,9 +80,17 @@
       letter-spacing: 1px;
       font-weight: 700;
       transition: opacity 0.2s ease;
+      flex-shrink: 0;
     }
 
-    /* 精緻放大鏡按鈕（用於展開/收折檢索面板） */
+    /* 右側按鈕複合容器 */
+    .action-box {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* 精緻放大鏡/面板切換按鈕 */
     .toggle-icon-btn {
       cursor: pointer;
       background: none;
@@ -103,9 +119,9 @@
       stroke-linejoin: round;
     }
 
-    /* 動態過渡：控制面板的收折動畫包裹器 */
+    /* 控制面板的收折動畫包裹器 (使用 CSS transition 實作平滑摺疊) */
     .collapsible-wrapper {
-      max-height: 500px; /* 給予足夠放下面板的預估最大高度 */
+      max-height: 600px; /* 給予足夠的估計最大高度，以利展開動畫計算 */
       overflow: hidden;
       transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease, margin-top 0.35s ease;
       opacity: 1;
@@ -117,7 +133,7 @@
       max-height: 0;
       opacity: 0;
       margin-top: 0;
-      pointer-events: none; /* 隱藏時關閉滑鼠觸發事件 */
+      pointer-events: none; /* 完全折疊時禁用滑鼠事件，避免誤觸 */
     }
 
     /* ==========================================================================
@@ -141,11 +157,11 @@
       font-weight: 600;
       font-size: 0.88rem;
       color: #5a6e61;
-      min-width: 75px;
+      min-width: 75px; /* 固定標籤寬度，確保右側按鈕群組左對齊 */
       flex-shrink: 0;
     }
 
-    /* 橫向捲動按鈕群組 */
+    /* 橫向捲動按鈕群組 (若按鈕超出螢幕寬度，會自動切換為水平滑動) */
     .btn-group {
       display: flex;
       gap: 8px;
@@ -154,7 +170,7 @@
       flex-grow: 1;
     }
 
-    /* 美化膠囊按鈕群組的橫向滾動條 */
+    /* 自訂水平捲動條精細樣式 */
     .btn-group::-webkit-scrollbar { height: 4px; }
     .btn-group::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
 
@@ -167,7 +183,7 @@
       border-radius: 20px;
       cursor: pointer;
       font-size: 0.88rem;
-      white-space: nowrap;
+      white-space: nowrap; /* 防止文字因寬度不足而被強制換行 */
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -184,30 +200,29 @@
       box-shadow: 0 2px 8px rgba(42, 71, 54, 0.25);
     }
 
-    /* 聲調按鈕選取狀態（文青磚紅風格） */
-    button.tone-btn.active {
+    /* 聲調按鈕與韻尾分類按鈕選取狀態（文青磚紅風格） */
+    button.tone-btn.active, button.type-btn.active {
       background-color: var(--accent-color);
       border-color: var(--accent-color);
+      color: white;
       box-shadow: 0 2px 8px rgba(184, 90, 56, 0.25);
     }
 
-    /* 面板內部的資料解析狀態提示列 */
+    /* 資料解析狀態提示列 (小綠點圖示) */
     .panel-status {
       font-size: 0.8rem;
       color: #3b5242;
       background: #e4eae6;
-      padding: 8px 14px;
-      border-radius: 8px;
-      margin-top: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
       font-weight: 600;
-      width: fit-content;
       border: 1px solid rgba(42, 71, 54, 0.1);
+      transition: opacity 0.2s ease;
     }
     
-    /* 狀態提示列的綠色動態前綴圓點 */
     .panel-status::before {
       content: "";
       display: inline-block;
@@ -219,19 +234,77 @@
     }
 
     /* ==========================================================================
-       4. 主要顯示區域與結果網格 (Main Content Layout)
+       4. 完全動態 CSS 濾鏡引擎 (100% 自動適應未知新韻腳)
+       ========================================================================== */
+    .word-card {
+      display: none; /* 預設全部隱藏 */
+      background: var(--card-bg);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 2px 6px rgba(42, 71, 54, 0.02);
+      border: 1px solid #e2e8e4;
+      flex-direction: column;
+      gap: 6px;
+      position: relative; 
+      cursor: help;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    /* 🔥 高級屬性映射公式：
+      利用 CSS 高級選擇器語法，直接比對 body 的 data-cur-vowel 與字卡的 data-vowel。
+      只要這兩個字串值完全相同，卡片就會轉為 flex 渲染。
+      這意味著靜態 CSS 不必再寫死 a, e, i, o, u，未來就算 JSON 突然蹦出 "x" 主音也能自動放行！
+    */
+    body[data-cur-vowel="all"] .word-card {
+      display: flex; /* 快捷放行：未選主音時全部顯示 */
+    }
+
+    /* 當 body 指定了特定核心主音時，只有卡片屬性與其完美相等（對稱）的才顯現 */
+    html body[data-cur-vowel="a"] .word-card[data-vowel="a"],
+    html body[data-cur-vowel="e"] .word-card[data-vowel="e"],
+    html body[data-cur-vowel="i"] .word-card[data-vowel="i"],
+    html body[data-cur-vowel="o"] .word-card[data-vowel="o"],
+    html body[data-cur-vowel="u"] .word-card[data-vowel="u"],
+    html body[data-cur-vowel="none"] .word-card[data-vowel="none"] {
+      display: flex;
+    }
+
+    /* 🚧 雙重阻斷過濾閥 (反向排除法)：
+      如果大分類、聲調「不是」all，且與卡片標籤不符時，擁有最高優先權強制隱藏。
+      這樣不論未來新增什麼主音或大類，邏輯鏈都不會斷裂。
+    */
+    body[data-cur-type="pure"] .word-card:not([data-type="pure"]),
+    body[data-cur-type="nasalVowel"] .word-card:not([data-type="nasalVowel"]),
+    body[data-cur-type="nasalCons"] .word-card:not([data-type="nasalCons"]),
+    body[data-cur-type="checked"] .word-card:not([data-type="checked"]),
+    body[data-cur-type="other"] .word-card:not([data-type="other"]) {
+      display: none !important;
+    }
+
+    body[data-cur-tone="1"] .word-card:not([data-tone="1"]),
+    body[data-cur-tone="2"] .word-card:not([data-tone="2"]),
+    body[data-cur-tone="3"] .word-card:not([data-tone="3"]),
+    body[data-cur-tone="4"] .word-card:not([data-tone="4"]),
+    body[data-cur-tone="5"] .word-card:not([data-tone="5"]),
+    body[data-cur-tone="7"] .word-card:not([data-tone="7"]),
+    body[data-cur-tone="8"] .word-card:not([data-tone="8"]) {
+      display: none !important;
+    }
+
+    /* ==========================================================================
+       5. 卡片內文、佈局與 Tooltip 釋義
        ========================================================================== */
     main {
       flex-grow: 1;
-      overflow-y: auto;
+      overflow-y: auto; /* 啟用獨立垂直捲動條 */
       max-width: 1200px;
       width: 100%;
       margin: 0 auto;
-      /* 底部預留大範圍 padding，確保尾部卡片的 Tooltip 展開時有充足空間而不被截斷 */
-      padding: 24px 20px 240px 20px; 
+      padding: 24px 20px 240px 20px; /* 底部保留超大 Padding 空間，防止 Tooltip 展開時被視窗切斷 */
       position: relative;
     }
 
+    /* 響應式 CSS Grid：依據視窗大小自動調整每行可卡入的字詞卡片數量 */
     .results-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -248,8 +321,8 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      position: relative; /* 作為絕對定位 Tooltip 的基準節點 */
-      cursor: help;
+      position: relative; 
+      cursor: help; /* 提示使用者此處可進行 Hover/點擊 互動 */
       transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
@@ -259,56 +332,54 @@
       color: var(--primary-color);
     }
 
-    .word-pinyin {
+    .word-TL {
       font-size: 0.9rem;
       color: var(--accent-color);
       font-family: monospace;
       font-weight: 600;
     }
 
+    /* 卡片底部的後設資訊列 (韻腳與聲調) */
     .word-info {
       font-size: 0.8rem;
       color: #6a7e71;
-      margin-top: auto; /* 將統計資訊推至卡片最底部 */
+      margin-top: auto; /* 強制將資訊列推至卡片最底部，維持上下對齊 */
       display: flex;
-      justify-content: space-between;
+      flex-direction: column;
+      gap: 2px;
       border-top: 1px dashed #ebf0ec;
       padding-top: 6px;
     }
+    
+    .word-info-row {
+      display: flex;
+      justify-content: space-between;
+    }
 
     /* ==========================================================================
-       5. 詳盡詞條懸浮視窗 (Tooltip 實色高對比優化樣式)
+       5. 詳盡詞條懸浮視窗 (Tooltip 樣式)
        ========================================================================== */
-    /* 🚀 乾淨、扎實、無霧化感的實色 Tooltip 面板，寬度固定，外觀與卡片大小完全脫鉤 */
     .word-tooltip {
-      visibility: hidden;
+      visibility: hidden; /* 預設隱藏且不佔空間 */
       opacity: 0;
       width: 320px; 
       max-height: 380px; 
-      overflow-y: auto;
-      
-      /* 完全不透明的扎實茶綠底色，移除 backdrop-filter 霧化感，確保高對比度 */
+      overflow-y: auto; /* 釋義過長時，Tooltip 內部可自行捲動 */
       background-color: var(--tooltip-bg);
-      backdrop-filter: none; 
+      backdrop-filter: none; /* 取消毛玻璃，完全實色化，避免字體層疊時反光模糊 */
       -webkit-backdrop-filter: none;
-      
       color: var(--tooltip-text);
       text-align: left;
-      
-      /* 保持精緻的不對稱古典葉狀外觀 */
       border-radius: 16px 4px 16px 16px; 
-      
       padding: 16px;
       position: absolute;
-      z-index: 99;
-      top: 110%; /* 顯示在字詞卡片的正下方 */
+      z-index: 99; /* 最高權重，橫跨在所有卡片之上 */
+      top: 110%; /* 位於卡片正下方 */
       left: 50%;
-      transform: translateX(-50%) translateY(6px); /* 初始自帶微向下位移，供上浮動畫使用 */
+      transform: translateX(-50%) translateY(6px); /* 初始位移：向下微偏 6px，做浮現動畫 */
       transition: opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
                   transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
                   visibility 0.15s ease;
-      
-      /* 實色表面搭配邊緣清晰的深色落塵陰影 */
       box-shadow: 0 12px 28px rgba(15, 31, 22, 0.18), 
                   0 4px 10px rgba(0, 0, 0, 0.06);
       border: 1px solid var(--tooltip-border);
@@ -317,11 +388,11 @@
     .word-tooltip::-webkit-scrollbar { width: 4px; }
     .word-tooltip::-webkit-scrollbar-thumb { background: rgba(42, 71, 54, 0.3); border-radius: 2px; }
 
-    /* 邊界溢出校正樣式（靠左側或靠右側邊緣的卡片，經由 JS 貼上 class 後重新覆寫定位與對齊） */
+    /* 防邊界溢出修正：若是靠最左或最右的卡片，自動改變 Tooltip 彈出角度與圓角樣式 */
     .word-card.edge-left .word-tooltip { left: 0; transform: translateX(0) translateY(6px); border-radius: 4px 16px 16px 16px; }
     .word-card.edge-right .word-tooltip { left: auto; right: 0; transform: translateX(0) translateY(6px); border-radius: 16px 4px 16px 16px; }
 
-    /* 小三角形裝飾箭頭：顏色與實色底色完全同步 */
+    /* Tooltip 頂部精緻小箭頭 */
     .word-tooltip::after {
       content: "";
       position: absolute;
@@ -335,24 +406,27 @@
     .word-card.edge-left .word-tooltip::after { left: 24px; }
     .word-card.edge-right .word-tooltip::after { left: auto; right: 24px; }
 
-    /* 滑鼠懸停（Hover）在卡片時的狀態轉換與平滑上浮微動效 */
+    /* CSS Hover 與 JavaScript 點擊高亮 (force-show-tooltip) 的彈出觸發機制 */
     .word-card:hover {
       border-color: var(--primary-color);
-      transform: translateY(-2px); /* 輕微上浮 */
+      transform: translateY(-2px); 
       box-shadow: 0 6px 14px rgba(42, 71, 54, 0.06);
-      z-index: 98; /* 高於周遭其他一般卡片，但仍低於 Tooltip 的 99 */
+      z-index: 98; /* 稍微提高當前 Hover 卡片的層級 */
     }
     
-    .word-card:hover .word-tooltip {
+    .word-card:hover .word-tooltip,
+    .word-card.force-show-tooltip .word-tooltip {
       visibility: visible;
       opacity: 1;
-      transform: translateX(-50%) translateY(0); /* 消除 Y 軸偏移，達成上浮顯現 */
+      transform: translateX(-50%) translateY(0); /* 回歸正位，形成優雅的微浮起動畫 */
     }
-    .word-card.edge-left:hover .word-tooltip { transform: translateX(0) translateY(0); }
-    .word-card.edge-right:hover .word-tooltip { transform: translateX(0) translateY(0); }
+    .word-card.edge-left:hover .word-tooltip,
+    .word-card.edge-left.force-show-tooltip .word-tooltip { transform: translateX(0) translateY(0); }
+    .word-card.edge-right:hover .word-tooltip,
+    .word-card.edge-right.force-show-tooltip .word-tooltip { transform: translateX(0) translateY(0); }
 
     /* ==========================================================================
-       6. 懸浮視窗內釋義與例句樣式 (Definitions & Examples)
+       6. 懸浮視窗內釋義與例句樣式
        ========================================================================== */
     .definition-block {
       margin-bottom: 12px;
@@ -373,7 +447,7 @@
       line-height: 1.5;
     }
     
-    /* 詞性標籤（如：名、動、代、形） */
+    /* 詞性標籤（如：名、動、形） */
     .def-type {
       background: #2a4736; 
       color: #ffffff;
@@ -391,7 +465,7 @@
       margin-top: 8px;
     }
 
-    /* 🚀 關鍵優化：將例句容器改為「純白實色獨立小卡片」，在較深的茶綠背景上形成極高反差 */
+    /* 巢狀結構例句方框 */
     .tooltip-ex-box {
       display: flex;
       flex-direction: column;
@@ -399,7 +473,7 @@
       background: #ffffff; 
       padding: 10px 12px;
       border-radius: 6px;
-      border-left: 3px solid var(--accent-color); /* 左側文青紅點綴提示線 */
+      border-left: 3px solid var(--accent-color); /* 左側磚紅裝飾邊條 */
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
     }
 
@@ -423,50 +497,58 @@
       font-weight: 500;
     }
 
-    /* 無篩選結果時的提示樣式 */
-    .no-data {
-      grid-column: 1 / -1;
+    /* 無資料狀態提示 */
+    #no-results-message {
+      display: none; 
+      grid-column: 1 / -1; /* 橫跨整行 */
       text-align: center;
       padding: 40px;
       color: #7a8e81;
       font-size: 1.05rem;
     }
-
-    /* 頁腳 */
-    footer {
-      background: #e4eae6;
-      padding: 12px 20px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #5a6e61;
-      border-top: 1px solid var(--border-color);
-      flex-shrink: 0;
-    }
-    footer a { color: var(--primary-color); text-decoration: none; font-weight: 600; }
-    footer a:hover { text-decoration: underline; }
   </style>
+  <style id="dynamic-rhyme-filter"></style>
 </head>
-<body>
+
+<body data-cur-vowel="all" data-cur-type="all" data-cur-rhyme="all" data-cur-tone="all">
 
   <header>
     <div class="header-content">
       <div class="top-bar">
-        <h1 id="main-title">台語押韻檢索</h1>
-        <button class="toggle-icon-btn" id="toggle-panel-btn" title="切換檢索控制台">
-          <svg viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
+        <div class="brand-box">
+          <h1 id="main-title">台語押韻檢索</h1>
+          <div id="panel-status-bar" class="panel-status">正在下載並解析資料...</div>
+        </div>
+        <div class="action-box">
+          <button class="toggle-icon-btn" id="toggle-panel-btn" title="切換檢索控制台">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div class="collapsible-wrapper" id="search-wrapper">
         <div class="control-panel">
+          
           <div class="control-row">
             <span class="row-label">核心主音</span>
             <div id="main-vowel-group" class="btn-group"></div>
           </div>
           
+          <div class="control-row">
+            <span class="row-label">韻尾分類</span>
+            <div id="rhyme-type-group" class="btn-group">
+              <button class="filter-choice-btn type-btn active" data-type="all">全部不分類</button>
+              <button class="filter-choice-btn type-btn" data-type="pure">純母音</button>
+              <button class="filter-choice-btn type-btn" data-type="nasalVowel">鼻化母音</button>
+              <button class="filter-choice-btn type-btn" data-type="nasalCons">鼻音韻尾</button>
+              <button class="filter-choice-btn type-btn" data-type="checked">入聲韻</button>
+              <button class="filter-choice-btn type-btn" data-type="other">其他</button>
+            </div>
+          </div>
+
           <div class="control-row">
             <span class="row-label">選擇韻腳</span>
             <div id="rhyme-group" class="btn-group">
@@ -487,112 +569,112 @@
               <button class="filter-choice-btn tone-btn" data-tone="8">第8聲 (高促)</button>
             </div>
           </div>
-          
-          <div id="panel-status-bar" class="panel-status">正在下載並解析資料...</div>
         </div>
       </div>
     </div>
   </header>
 
   <main>
-    <div id="results-container" class="results-grid"></div>
-  </main>
-
-  <!-- <footer>
-  </footer> -->
+     <div id="results-container" class="results-grid">
+      <div id="no-results-message">查無符合目前篩選條件的台語字詞。</div>
+    </div>
+    </main>
 
   <script>
-    // g0v 開源臺灣閩南語辭典開放資料集原始 JSON
+    // 舊版教育部台語辭典 g0v JSON 來源
     const DATA_URL = "https://raw.githubusercontent.com/g0v/moedict-data-twblg/refs/heads/master/dict-twblg.json";
     
-    // 臺灣閩南語羅馬字拼音方案 (臺羅拼音) 常見聲母清單，用以自拼音首部扣除，提煉出「韻母」
-    const initials = ["tshenn", "tsh", "ts", "ph", "th", "kh", "ng", "m", "p", "t", "k", "g", "b", "l", "h", "s", "j"];
-    // const initials = ["tsh", "ts", "ph", "th", "kh", "ng", "m", "p", "t", "k", "g", "b", "l", "h", "s", "j", "n"];
+    // 台語常見聲母表，用於進行羅馬字字串比對，剝離前方聲母以取出韻腳
+    const initials = ["tsh", "ts", "ph", "th", "kh", "ng", "m", "p", "t", "k", "g", "b", "l", "h", "s", "j", "n"];
     
-    // 臺羅變音符號標記（Unicode 獨立組合用附加符號）與傳統八聲調（2~8聲，1聲無符號）的映射對照表
+    // Unicode 組合音標（解碼 NFD 格式）對應的標準台語調號（第2、3、5、6、7、8聲）
     const toneMap = { '\u0301': 2, '\u0300': 3, '\u0302': 5, '\u0306': 6, '\u0304': 7, '\u030d': 8 };
 
-    // 運行時期核心全域記憶體快取
-    let processedWords = [];     // 存放經格式化、解析完畢的完整詞條平坦化陣列
-    let rhymeDictionary = {};    // 雜湊字典結構：{ "a": Set(["a", "an", "ang"]), "i": Set(["i", "iam"]) }，用於建立兩層式連動 UI
-    let currentMainVowel = "";   // 目前選取的核心主音標籤 (例如: 'a')
-    let currentRhyme = "";       // 目前選取的具體韻腳標籤 (例如: 'ang')
-    let currentTone = "all";     // 目前選取的篩選聲調條件 ('all' 或 數字 1~8)
+    // 介面標籤中文對照表
+    const typeLabelMap = {
+      "pure": "純母音",
+      "nasalVowel": "鼻化母音",
+      "nasalCons": "鼻音韻尾",
+      "checked": "入聲韻",
+      "other": "其他"
+    };
 
+    // 全域狀態記憶體
+    let rhymeDictionary = {};       // 巢狀索引結構：{ 核心主音: { 具體韻腳: 韻尾分類 } }，加速 UI 生成
+    let currentMainVowel = "all";   // 當前選取主音 (如 'a', 'e', 'none', 'all')
+    let currentRhyme = "all";       // 當前選取具體韻腳 (如 'ang', 'all')      
+    let currentRhymeType = "all";   // 當前選取韻尾分類 (如 'pure', 'other', 'all')
+    let currentTone = "all";        // 當前選取聲調 (如 1, 2, 'all')
     /**
-     * 點擊右上角控制鈕時，切換面板展開狀態與標題淡入淡出的排版調整
+     * 【UI 控制】切換控制面板展開/收折
      */
     document.getElementById("toggle-panel-btn").onclick = function() {
       const wrapper = document.getElementById("search-wrapper");
-      const title = document.getElementById("main-title");
-      const topBar = document.querySelector(".top-bar");
+      const statusBar = document.getElementById("panel-status-bar");
       wrapper.classList.toggle("collapsed");
       
-      // 若收折抽屜，將系統大標題淡出隱藏，挪移出最大的垂直視野給予結果網格
+      // 折疊時隱藏上方的小綠點狀態列，展開時復原
       if (wrapper.classList.contains("collapsed")) {
-        title.style.opacity = "0";
-        setTimeout(() => { if(wrapper.classList.contains("collapsed")) title.style.visibility = "hidden"; }, 200);
-        topBar.style.justifyContent = "flex-end"; 
+        statusBar.style.opacity = "0";
+        setTimeout(() => { if(wrapper.classList.contains("collapsed")) statusBar.style.visibility = "hidden"; }, 200);
       } else {
-        title.style.visibility = "visible";
-        title.style.opacity = "1";
-        topBar.style.justifyContent = "space-between"; 
+        statusBar.style.visibility = "visible";
+        statusBar.style.opacity = "1";
       }
     };
 
     /**
-     * 核心演算法：解析單個詞彙拼音字串，精確提取其「最後一個字的韻母及聲調」
-     * @param {string} rawPinyin - 來自教育部原始資料的臺羅拼音字串 (例如: "tsiah-ē", "pàng-tsuànn")
-     * @returns {Object} { rhyme: 韻母字串, tone: 數字聲調 }
+     * 【核心演算一】解析臺羅拼音（處理多音節、數字調號、Unicode 組合音標、隱性入聲）
+     * @param {string} rawTL - 原始輸入的臺羅音標欄位（可能含括號或多個音節）
+     * @returns {object} - { rhyme: 韻腳字串, tone: 數字調號 }
      */
-    function parseLastPinyin(rawPinyin) {
-      // 1. 清理字串，剔除非主音的括號備註內容（如：又音、合音註記）
-      let cleanTrs = rawPinyin.trim().toLowerCase().replace(/（.*）/g, "");
+    function parseLastTL(rawTL) {
+      // 1. 移除非必要的空白，並使用正規表達式抹除掉諸如「（又讀）」等括號註記
+      let cleanTrs = rawTL.trim().toLowerCase().replace(/（.*）/g, ""); 
       
-      // 2. 切割多音節詞，台語押韻專注於「最後一個字」(尾字押韻原則)
+      // 2. 切分多音節詞彙（例如 "tsia̍h-pn̄g"），因為押韻只看最後一個音節
       const syllables = cleanTrs.split(/[\s\-]+/);
       let lastSyllable = syllables[syllables.length - 1].trim();
       
-      // 3. 過濾掉非拉丁字母及非 Unicode 變音符號的無效雜訊字元
+      // 3. 只保留英文字母與特殊 Unicode 音標組合字元
       lastSyllable = lastSyllable.replace(/[^a-z\u0300-\u030d]/g, '');
 
       if (!lastSyllable) return { rhyme: null, tone: 1 };
 
-      // 【情況 A】：拼音尾端直接帶有數字型態聲調標記 (例如: "siu1", "koong3")
+      // 4. 情境 A：若是傳統「數字調號」格式（例如 "ann7"）
       const numMatch = lastSyllable.match(/\d+$/);
       if (numMatch) {
         const tone = parseInt(numMatch[0]);
-        const purePinyin = lastSyllable.replace(/\d+$/, "");
-        let rhyme = purePinyin;
-        // 逐一比對聲母表，自頭部扣除聲母，留下來的就是純韻腳
+        const pureTL = lastSyllable.replace(/\d+$/, "");
+        let rhyme = pureTL;
+        // 比對聲母清單，將前面的聲母切除，即可抽取出純韻腳
         for (let init of initials) {
-          if (purePinyin.startsWith(init)) { rhyme = purePinyin.slice(init.length); break; }
+          if (pureTL.startsWith(init)) { rhyme = pureTL.slice(init.length); break; }
         }
         return { rhyme, tone };
       }
 
-      // 【情況 B】：拼音使用標準 Unicode 上標變音符號標示聲調 (例如: "sî", "pîng")
-      // 透過 NFD 將合成字元分解為「基礎字母 + 獨立變音符號」(例如: 'î' 會被拆成 'i' 與 '\u0302')
+      // 5. 情境 B：教育部標準「組合音標上標」格式（例如 "nńg"）
+      // 使用 NFD 進行常態化拆解，將組合音標（調號）與基礎英文字母分開
       const normalized = lastSyllable.normalize("NFD");
-      let tone = 1; // 預設無符號時為第 1 聲（高平調）
-      let cleanPinyin = "";
+      let tone = 1; // 預設為第 1 聲
+      let cleanTL = "";
       
       for (let char of normalized) {
         if (toneMap[char]) { 
-          tone = toneMap[char]; // 識別出聲調
+          tone = toneMap[char];  // 抓取到調號對應
         } else { 
-          cleanPinyin += char;  // 重新還原回純字母組成的拼音字串
+          cleanTL += char;       // 重新拼回純英文的臺羅字串
         }
       }
 
-      // 自乾淨的純字母拼音中剔除開頭聲母，獲得最終純韻腳
-      let rhyme = cleanPinyin;
+      // 切除前方聲母，留下純韻腳
+      let rhyme = cleanTL;
       for (let init of initials) {
-        if (cleanPinyin.startsWith(init)) { rhyme = cleanPinyin.slice(init.length); break; }
+        if (cleanTL.startsWith(init)) { rhyme = cleanTL.slice(init.length); break; }
       }
 
-      // 💡 入聲字特殊聲調校正規則
-      // 尾綴為 p, t, k, h 的音節實為入聲促調，若未標音調符號時，分別校正歸類為第 4 或第 8 聲
+      // 6. 防呆校正：若韻腳以 p, t, k, h 結尾（入聲字），若無標調，在語言學上對應第 4 聲（中促）或第 8 聲（高促）
       if (["p", "t", "k", "h"].includes(rhyme.slice(-1))) {
         if (tone === 1) tone = 4;
         if (tone === 3) tone = 8;
@@ -601,50 +683,98 @@
     }
 
     /**
-     * 系統初始化：非同步下載開放資料 JSON 並進行深度資料清洗與欄位解構映射
+     * 【核心演算二】語言學韻尾嚴格歸類演算法
+     * 負責拆解「核心主音」與判定五大韻尾分類（純母音/鼻化母音/鼻音韻尾/入聲韻/其他）
+     * @param {string} rhyme - 純英文字母的韻腳 (例如 'ang', 'ng', 'ann')
+     * @returns {object} - { mainVowel: 主音鍵值, rType: 韻尾分類鍵值 }
+     */
+    function extractVowelAndType(rhyme) {
+      let mainVowel = "";
+      let rType = "other"; // 預設歸類為「other (其他)」，若不滿足前四者，則自動落入此類
+
+      // 1. 條件分流：判定四大核心韻尾分類
+      if (rhyme.endsWith("p") || rhyme.endsWith("t") || rhyme.endsWith("k") || rhyme.endsWith("h")) {
+        rType = "checked";      // 入聲韻
+      } else if (rhyme.endsWith("nn")) {
+        rType = "nasalVowel";   // 鼻化母音
+      } else if (rhyme.endsWith("m") || rhyme.endsWith("n") || rhyme.endsWith("ng")) { 
+        // 陽聲韻判定：以 m, n, ng 結尾
+        rType = "nasalCons";    // 鼻音韻尾
+      } else if (/^[aeiou]+$/.test(rhyme)) { 
+        // 陰聲韻判定：純母音組成，且中間無任何輔音塞音
+        rType = "pure";         // 純母音
+      }
+
+      // 2. 主音抽取：特別處理純成音節（如：m, mh, ng, ngh）
+      if (rhyme === "m" || rhyme === "mh" || rhyme === "ng" || rhyme === "ngh") {
+        mainVowel = "none";    // 歸類於「無主音」
+        return { mainVowel, rType };
+      }
+
+      // 3. 處理複母音/介音（如 ia, ua, uai），取其後面最關鍵的核心主要發音母音
+      let pureVowel = rhyme.charAt(0);
+      if ((rhyme.startsWith('i') || rhyme.startsWith('u')) && rhyme.length > 1) {
+        const secondChar = rhyme.charAt(1);
+        if (['a', 'e', 'o', 'u', 'i'].includes(secondChar)) {
+          pureVowel = secondChar; // 複母音時，往後取第二位為主音
+        }
+      }
+
+      // 驗證是否在五大母音集內，否則劃歸 none
+      if (['a', 'e', 'i', 'o', 'u'].includes(pureVowel)) {
+        mainVowel = pureVowel;
+      } else {
+        mainVowel = "none";
+      }
+
+      return { mainVowel, rType };
+    }
+
+    /**
+     * 【資料初始化】非同步下載與主動解析教育部原始巨大 JSON 資料包
      */
     async function initSystem() {
       const statusBar = document.getElementById("panel-status-bar");
+      const container = document.getElementById("results-container");
+
       try {
         const response = await fetch(DATA_URL);
         const rawData = await response.json();
+        const fragment = document.createDocumentFragment();
         let validCount = 0;
         
         rawData.forEach(item => {
           if (!item.title || !item.heteronyms) return;
           
           item.heteronyms.forEach(het => {
-            if (!het.trs) return;
+            if (!het.trs) return; // 跳過無拼音欄位的死資料
             
-            // 挑選第一個首要的台羅拼音推薦選項
+            // 取出多個讀音選項中的第一個標準讀音進行解算
             const firstTrsOption = het.trs.split(/[,/、]/)[0].trim();
             if (!firstTrsOption) return;
             
-            // 呼叫拼音核心演算法解析尾韻
-            const { rhyme, tone } = parseLastPinyin(firstTrsOption);
+            const { rhyme, tone } = parseLastTL(firstTrsOption);
             
             if (rhyme) {
               let structuredDefinitions = [];
 
-              // 深度解構多重釋義與夾雜特殊 Unicode 控制字元的例句結構
+              // 解析與清洗釋義段落，同時處理教育部特有的多層級例句格式控制碼 (\uFFF9 系列)
               if (het.definitions && het.definitions.length > 0) {
                 het.definitions.forEach(defItem => {
                   let defText = defItem.def ? defItem.def.replace(/[\[\]]/g, "") : "暫無釋義";
                   let defType = defItem.type || "";
                   let examplesArray = [];
 
-                  // 解析原始語料庫中夾雜 Unicode 特殊字元 (如 \uFFF9) 的例句三段式分割機制
                   if (defItem.example && defItem.example.length > 0) {
                     defItem.example.forEach(rawEx => {
                       const cleanEx = rawEx.replace(/[\uFFFC]+/g, "").trim(); 
-                      const parts = cleanEx.split(/[\uFFF9\uFFFA\uFFFB]+/);
+                      const parts = cleanEx.split(/[\uFFF9\uFFFA\uFFFB]+/); // 針對特殊字元進行例句三元拆解
                       
-                      // 依照標準格式切分：[邊界符, 漢字, 臺羅拼音, 華語翻譯]
                       if (parts.length >= 4) {
                         examplesArray.push({
-                          hanzi: parts[1].trim(),
-                          romaji: parts[2].trim(),
-                          mandarin: parts[3].trim()
+                          hanzi: parts[1].trim(),     // 漢字例句
+                          romaji: parts[2].trim(),    // 臺羅拼音
+                          mandarin: parts[3].trim()  // 華語對譯
                         });
                       } else if (parts.length === 3) {
                         examplesArray.push({
@@ -658,7 +788,7 @@
                     });
                   }
 
-                  // 封裝成結構化釋義物件
+                  // 封裝成乾淨的結構物件
                   structuredDefinitions.push({
                     type: defType,
                     def: defText,
@@ -669,206 +799,317 @@
                 structuredDefinitions.push({ type: "", def: "暫無釋義", examples: [] });
               }
 
-              // 快取進記憶體陣列，供後續篩選使用
-              processedWords.push({
-                word: item.title,
-                pinyin: het.trs,
-                rhyme: rhyme,
-                tone: tone,
-                definitions: structuredDefinitions
-              });
-              validCount++;
+              // 執行核心算法二：進行主音與類型的語言學分揀
+              const { mainVowel, rType } = extractVowelAndType(rhyme);
 
-              // 分類核心主音（取韻母第一個字母，惟台語傳統獨立鼻音音節 m, ng 需獨立作為大分類標籤）
-              let mainVowel = rhyme.charAt(0);
-              if (rhyme === "m" || rhyme === "mh") mainVowel = "m";
-              if (rhyme.startsWith("ng") && rhyme !== "ngo") mainVowel = "ng";
+              const card = document.createElement("div");
+              card.className = "word-card";
+              card.setAttribute("data-vowel", mainVowel);
+              card.setAttribute("data-type", rType);
+              card.setAttribute("data-rhyme", rhyme);
+              card.setAttribute("data-tone", tone);
               
+              let definitionsHTML = "";
+              structuredDefinitions.forEach((defItem, dIdx) => {
+                let examplesHTML = "";
+                if (defItem.examples && defItem.examples.length > 0) {
+                  examplesHTML = `<div class="tooltip-ex-container">`;
+                  defItem.examples.forEach(ex => {
+                    examplesHTML += `
+                      <div class="tooltip-ex-box">
+                        <div class="ex-hanzi">例：${ex.hanzi}</div>
+                        ${ex.romaji ? `<div class="ex-romaji">${ex.romaji}</div>` : ''}
+                        ${ex.mandarin ? `<div class="ex-mandarin">（${ex.mandarin}）</div>` : ''}
+                      </div>
+                    `;
+                  });
+                  examplesHTML += `</div>`;
+                }
+                const typeTag = defItem.type ? `<span class="def-type">${defItem.type}</span>` : "";
+                definitionsHTML += `
+                  <div class="definition-block">
+                    <div class="tooltip-def">${structuredDefinitions.length > 1 ? (dIdx + 1) + '. ' : ''}${typeTag}${defItem.def}</div>
+                    ${examplesHTML}
+                  </div>
+                `;
+              });
+
+              card.innerHTML = `
+                <div class="word-title">${item.title}</div>
+                <div class="word-TL">${het.trs}</div>
+                <div class="word-info">
+                  <div class="word-info-row">
+                    <span>韻腳: ${rhyme}</span>
+                    <span>第 ${tone} 聲</span>
+                  </div>
+                  <div class="word-info-row" style="color: #8da193; font-size: 0.75rem; padding-top: 2px;">
+                    <span>${typeLabelMap[rType]}</span>
+                  </div>
+                </div>
+                <div class="word-tooltip">${definitionsHTML}</div>
+              `;
+
+              card.addEventListener('click', (e) => {
+                if (e.target.closest('.word-tooltip')) return; 
+                const isOpen = card.classList.contains('force-show-tooltip');
+                document.querySelectorAll('.word-card').forEach(c => c.classList.remove('force-show-tooltip'));
+                if (!isOpen) card.classList.add('force-show-tooltip');
+                e.stopPropagation();
+              });
+
+              fragment.appendChild(card);
+              validCount++;
+              
+              // 建立動態巢狀字典，供 UI 連動選單使用
               if (!rhymeDictionary[mainVowel]) {
-                rhymeDictionary[mainVowel] = new Set();
+                rhymeDictionary[mainVowel] = {};
               }
-              rhymeDictionary[mainVowel].add(rhyme);
+              rhymeDictionary[mainVowel][rhyme] = rType;
             }
           });
         });
 
-        statusBar.innerText = `資料載入完成！成功建置 ${validCount} 筆尾字押韻詞條。`;
-        buildUI(); // 驅動建立主音控制介面
+        container.appendChild(fragment); 
+        statusBar.innerText = `載入完成 (${validCount} 筆)`;
+        buildUI(); // 驅動建置前端按鈕元件
         
       } catch (error) {
         console.error(error);
-        statusBar.innerText = "資料下載或解析失敗，請確認網路狀態。";
+        statusBar.innerText = "資料載入失敗";
       }
     }
 
     /**
-     * UI 建立：繪製第一層「核心主音」膠囊按鈕，並綁定聲調切換事件監聽
+     * 【UI 渲染一】建置主音、韻尾、聲調之按鈕骨架
      */
     function buildUI() {
       const mainVowelGroup = document.getElementById("main-vowel-group");
       mainVowelGroup.innerHTML = "";
 
-      // 依照傳統閩南語常用習慣順序進行排序：[A, E, I, O, U, M, NG]
-      const sortedVowels = Object.keys(rhymeDictionary).sort((a,b) => {
-        const order = { 'a':1, 'e':2, 'i':3, 'o':4, 'u':5, 'm':6, 'ng':7 };
+      // 依傳統字母順序排序 A, E, I, O, U，並將【無主音】挪移至最末端
+      const allVowelBtn = document.createElement("button");
+      allVowelBtn.className = "filter-choice-btn active";
+      allVowelBtn.innerText = "全部主音";
+      allVowelBtn.onclick = () => {
+        document.querySelectorAll("#main-vowel-group button").forEach(b => b.classList.remove("active"));
+        allVowelBtn.classList.add("active");
+        currentMainVowel = "all";
+        currentRhyme = "all";
+        updateRhymeOptions();
+        applyFilterAttributes();
+      };
+      mainVowelGroup.appendChild(allVowelBtn);
+
+        const sortedVowels = Object.keys(rhymeDictionary).sort((a,b) => {
+        const order = { 'a':1, 'e':2, 'i':3, 'o':4, 'u':5, 'none':6 };
         return (order[a] || 99) - (order[b] || 99);
       });
 
+      // 循環生成核心主音膠囊按鈕
       sortedVowels.forEach((vowel, index) => {
         const btn = document.createElement("button");
         btn.className = "filter-choice-btn";
-        btn.innerText = vowel.toUpperCase() + " 系列";
-        btn.onclick = () => selectMainVowel(vowel, btn);
-        mainVowelGroup.appendChild(btn);
         
-        // 頁面預設初次載入時，直接啟動排序第一個的主音分類（A系列）
-        if (index === 0) selectMainVowel(vowel, btn);
+        if (vowel === "none") {
+          btn.innerText = `無主音`;
+        } else {
+          btn.innerText = `${vowel.toUpperCase()} 主音系列`;
+        }
+        
+        // 點擊主音事件：重置下游韻腳狀態、重繪選單並重刷結果
+        btn.onclick = () => {
+          document.querySelectorAll("#main-vowel-group button").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentMainVowel = vowel;
+          currentRhyme = "all"; 
+          updateRhymeOptions();  
+          applyFilterAttributes(); 
+        };
+        mainVowelGroup.appendChild(btn);
       });
 
-      // 註冊靜態聲調按鈕群組的點擊過濾事件
+      // 綁定「韻尾分類」按鈕群的點擊連動監聽
+      const typeButtons = document.querySelectorAll(".type-btn");
+      typeButtons.forEach(btn => {
+        btn.onclick = () => {
+          typeButtons.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentRhymeType = btn.getAttribute("data-type");
+          currentRhyme = "all"; // 切換大分類時，具體韻腳必須歸零回首位
+          
+          updateRhymeOptions(); 
+          applyFilterAttributes();
+        };
+      });
+
+      // 綁定「聲調篩選」按鈕群的點擊連動監聽
       const toneButtons = document.querySelectorAll(".tone-btn");
       toneButtons.forEach(btn => {
         btn.onclick = () => {
           toneButtons.forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           currentTone = btn.getAttribute("data-tone");
-          renderResults(); // 條件變更，立即驅動結果重繪
+          applyFilterAttributes();
         };
       });
+
+      // 首次載入的主動同步
+      updateRhymeOptions();
+      applyFilterAttributes();
+      setupEdgeObserver(); 
     }
 
     /**
-     * 連動機制：點擊核心主音時，動態建構對應的第二層「具體韻腳」膠囊按鈕群
+     * 【UI 渲染二】核心連動機制：根據當前「核心主音」與「韻尾分類」動態生成第三排的「具體韻腳」
      */
-    function selectMainVowel(vowel, element) {
-      document.querySelectorAll("#main-vowel-group button").forEach(b => b.classList.remove("active"));
-      element.classList.add("active");
-      currentMainVowel = vowel;
-      
+    function updateRhymeOptions() {
       const rhymeGroup = document.getElementById("rhyme-group");
       rhymeGroup.innerHTML = "";
+
+      // 如果選了核心主音「全部主音」、韻尾分類「全部不分類」，先提示使用者縮小範圍
+      if (currentMainVowel === "all" && currentRhymeType === "all") {
+        rhymeGroup.innerHTML = `<span style="color:#7a8e81; font-size:0.9rem;">請選擇特定核心主音以顯示具體韻腳</span>`;
+        return;
+      }
+      // 收集符合篩選條件的具體韻腳
+      let filteredRhymes = [];
+
+      if (currentMainVowel !== "all") {
+        // 情境 A：指定特定主音
+
+      const rhymeMap = rhymeDictionary[currentMainVowel] || {};
       
-      // 取出該主音對應的 Set 集合並做字母表排序
-      const rhymes = Array.from(rhymeDictionary[vowel]).sort();
+      // 進行雙重條件交叉篩選，找出匹配當前大類目的具體韻腳字串
+      filteredRhymes = Object.keys(rhymeMap).filter(rhyme => {
+        if (currentRhymeType === "all") return true; // 若選取全部不分類，無條件放行
+          return rhymeMap[rhyme] === currentRhymeType;
+        });
+      } else {
+        // 情境 B：選取「全部主音」，但有指定「特定韻尾分類」 (新擴充邏輯)
+        // 遍歷所有主音，撈出該分類下的所有韻腳
+        Object.keys(rhymeDictionary).forEach(vowel => {
+          const rhymeMap = rhymeDictionary[vowel] || {};
+          Object.keys(rhymeMap).forEach(rhyme => {
+            if (rhymeMap[rhyme] === currentRhymeType) {
+              filteredRhymes.push(rhyme);
+            }
+          });
+        });
+        // 由於可能不同主音有相同的韻腳名稱（不過在臺羅通常主音不同韻腳就不同），保險起見做個去重
+        filteredRhymes = [...new Set(filteredRhymes)];
+      }
+
+      // 排序韻腳字串
+      filteredRhymes.sort();
       
-      rhymes.forEach((rhyme, index) => {
+      // 生成「全部具體韻腳」預設通用膠囊
+      const allRhymesBtn = document.createElement("button");
+      allRhymesBtn.className = "filter-choice-btn";
+      allRhymesBtn.innerText = "全部具體韻腳";
+      
+      if (currentRhyme === "all") {
+        allRhymesBtn.classList.add("active");
+      }
+      
+      allRhymesBtn.onclick = () => {
+        document.querySelectorAll("#rhyme-group button").forEach(b => b.classList.remove("active"));
+        allRhymesBtn.classList.add("active");
+        currentRhyme = "all";
+        applyFilterAttributes();
+      };
+      rhymeGroup.appendChild(allRhymesBtn);
+
+      // 若該分類下無內容（例如 I 主音系列下可能沒有 other 分類），給予溫和提示
+      if (filteredRhymes.length === 0) {
+        const tip = document.createElement("span");
+        tip.style.cssText = "color:#b85a38; font-size:0.85rem; padding-left:4px; font-weight:600;";
+        tip.innerText = "該分類下無對應韻腳";
+        rhymeGroup.appendChild(tip);
+        return;
+      }
+
+      // forEach生成具體的韻腳按鈕（例如：ang, ak, am）
+      filteredRhymes.forEach((rhyme) => {
         const btn = document.createElement("button");
         btn.className = "filter-choice-btn";
         btn.innerText = rhyme;
+        
+        if (currentRhyme === rhyme) {
+          btn.classList.add("active");
+        }
+        
         btn.onclick = () => {
           document.querySelectorAll("#rhyme-group button").forEach(b => b.classList.remove("active"));
           btn.classList.add("active");
           currentRhyme = rhyme;
-          renderResults(); // 韻腳變更，重繪畫面
+          applyFilterAttributes(); 
         };
         rhymeGroup.appendChild(btn);
-        
-        // 預設選取並啟用該主音底下的第一個子韻腳項目
-        if (index === 0) {
-          btn.classList.add("active");
-          currentRhyme = rhyme;
-        }
       });
-      renderResults();
     }
 
     /**
-     * 終端渲染：依據當前全域變數過濾記憶體資料，並建立 DOM 節點與 IntersectionObserver 防溢出機制
+     * 【UI 渲染三】最終字詞卡片與 Tooltip 懸浮視窗的網格渲染引擎
      */
-    function renderResults() {
-      const container = document.getElementById("results-container");
-      container.innerHTML = "";
+        /**
+     * 🚀 解決死板一刀切的動態濾鏡注入控制
+     */
+    function applyFilterAttributes() {
+      const body = document.body;
+      body.setAttribute("data-cur-vowel", currentMainVowel);
+      body.setAttribute("data-cur-type", currentRhymeType);
+      body.setAttribute("data-cur-tone", currentTone);
+      body.setAttribute("data-cur-rhyme", currentRhyme);
 
-      // 執行高效條件過濾
-      const filtered = processedWords.filter(item => {
-        const matchRhyme = item.rhyme === currentRhyme;
-        const matchTone = (currentTone === "all") || (item.tone === parseInt(currentTone));
-        return matchRhyme && matchTone;
+      const dynamicStyle = document.getElementById("dynamic-rhyme-filter");
+      
+      // 1. 先將所有卡片預設隱藏
+      let cssRules = `
+        .word-card { display: none !important; }
+      `;
+
+      // 2. 建立精準的動態聯動放行規則
+      let vowelSelector = currentMainVowel !== "all" ? `[data-vowel="${currentMainVowel}"]` : "";
+      let typeSelector = currentRhymeType !== "all" ? `[data-type="${currentRhymeType}"]` : "";
+      let toneSelector = currentTone !== "all" ? `[data-tone="${currentTone}"]` : "";
+      let rhymeSelector = currentRhyme !== "all" ? `[data-rhyme="${currentRhyme}"]` : "";
+
+      // 3. 組合出最高權重的放行令：只有同時符合當前所有「非 all」條件的卡片才會顯示
+      cssRules += `
+        .word-card${vowelSelector}${typeSelector}${toneSelector}${rhymeSelector} { 
+          display: flex !important; 
+        }
+      `;
+
+      // 4. 注入樣式表
+      dynamicStyle.innerHTML = cssRules;
+
+      // 非阻塞型 UI 查無結果異步判定
+      setTimeout(() => {
+        const anyVisible = Array.from(document.querySelectorAll('.word-card')).some(card => card.offsetWidth > 0);
+        document.getElementById('no-results-message').style.display = anyVisible ? 'none' : 'block';
+      }, 15);
+    }
+
+    // 點擊空白處全面解除卡片的點擊鎖定狀態
+    function setupEdgeObserver() {
+      document.addEventListener('click', () => {
+        document.querySelectorAll('.word-card').forEach(c => c.classList.remove('force-show-tooltip'));
       });
 
-      // 依台語聲調第 1 至 8 聲作遞增排序，利於創作時檢索同聲調段落
-      filtered.sort((a, b) => a.tone - b.tone);
-
-      // 查無匹配結果時呈現優雅的空狀態提示
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="no-data">查無符合尾字「${currentRhyme}」韻、第 ${currentTone === 'all' ? '任意' : currentTone} 聲的字詞。</div>`;
-        return;
-      }
-
-      // 逐筆組裝卡片與 Tooltip 的複雜結構 HTML 節點
-      filtered.forEach(item => {
-        const card = document.createElement("div");
-        card.className = "word-card";
-        
-        let definitionsHTML = "";
-        
-        // 走訪多重字詞釋義
-        item.definitions.forEach((defItem, dIdx) => {
-          let examplesHTML = "";
-          
-          // 組裝小字條內部高純白例句盒
-          if (defItem.examples && defItem.examples.length > 0) {
-            examplesHTML = `<div class="tooltip-ex-container">`;
-            defItem.examples.forEach(ex => {
-              examplesHTML += `
-                <div class="tooltip-ex-box">
-                  <div class="ex-hanzi">例：${ex.hanzi}</div>
-                  ${ex.romaji ? `<div class="ex-romaji">${ex.romaji}</div>` : ''}
-                  ${ex.mandarin ? `<div class="ex-mandarin">（${ex.mandarin}）</div>` : ''}
-                </div>
-              `;
-            });
-            examplesHTML += `</div>`;
-          }
-
-          const typeTag = defItem.type ? `<span class="def-type">${defItem.type}</span>` : "";
-          
-          definitionsHTML += `
-            <div class="definition-block">
-              <div class="tooltip-def">${item.definitions.length > 1 ? (dIdx + 1) + '. ' : ''}${typeTag}${defItem.def}</div>
-              ${examplesHTML}
-            </div>
-          `;
-        });
-
-        // 注入卡片內容
-        card.innerHTML = `
-          <div class="word-title">${item.word}</div>
-          <div class="word-pinyin">${item.pinyin}</div>
-          <div class="word-info">
-            <span>尾韻: ${item.rhyme}</span>
-            <span>第 ${item.tone} 聲</span>
-          </div>
-          
-          <div class="word-tooltip">
-            ${definitionsHTML}
-          </div>
-        `;
-        container.appendChild(card);
-      });
-
-      // 💡 智慧邊界碰撞偵測：建立交叉觀測器（IntersectionObserver）
-      // 當滑鼠懸停在視窗極左側或極右側的字詞卡片時，自動為其注入對應的修正邊界樣式（edge-left / edge-right）
-      // 強制翻轉 Tooltip 展開的對齊方向與不對稱圓角，杜絕面板溢出螢幕視野外。
-      const cards = container.querySelectorAll('.word-card');
-      const observer = new IntersectionObserver(() => {
+      // 效能優化與位置修正：利用 IntersectionObserver 動態追蹤邊緣卡片
+      // 若卡片位置過於靠左或靠右，即時加上 edge-left/right 樣式，防止 Tooltip 彈出時超出瀏覽器視窗範圍
+      const cards = document.querySelectorAll('.word-card');
+      
         const windowWidth = window.innerWidth;
         cards.forEach(card => {
           const rect = card.getBoundingClientRect();
-          if (rect.left < 100) {
-            card.classList.add('edge-left');  // 靠左臨界點：Tooltip 改為靠左邊界向右對齊
-          } 
-          else if (windowWidth - rect.right < 100) {
-            card.classList.add('edge-right'); // 靠右臨界點：Tooltip 改為靠右邊界向左對齊
-          }
+          if (rect.left < 100) card.classList.add('edge-left');  // 靠左臨界點：Tooltip 改為靠左邊界向右對齊
+          else if (windowWidth - rect.right < 100) card.classList.add('edge-right'); // 靠右臨界點：Tooltip 改為靠右邊界向左對齊
         });
-      }, { threshold: 0.1 });
-      
-      // 對動態生成出來的卡片實體節點啟動監聽觀察
-      cards.forEach(card => observer.observe(card));
     }
 
-    // 瀏覽器底層 DOM 解析完畢時，立即發送初始化與下載資料請求
+    // 網頁載入完畢，立刻驅動初始化流程
     window.onload = initSystem;
   </script>
 </body>
